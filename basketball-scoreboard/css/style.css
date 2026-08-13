@@ -151,9 +151,9 @@ button {
   transition: background .12s, border-color .12s, color .12s;
 }
 .chip[aria-pressed="true"] {
-  border-color: var(--lcd-on);
-  background: rgba(255, 42, 20, .14);
-  color: #ff8f7c;
+  border-color: #fff;
+  background: rgba(255, 255, 255, .13);
+  color: #fff;
 }
 
 .hint {
