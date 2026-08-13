@@ -13,6 +13,7 @@
   /* bulb colors: red scores, amber clock — as on a Fair-Play board */
   --lcd-on:    #ff2f2f;
   --lcd-amber: #ffa019;
+  --lcd-green: #43e04d;
 
   /* team colors */
   --c-red:   #d81f26;
@@ -408,33 +409,25 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 12px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #0c0d10;
+  background: linear-gradient(180deg, #131417, #0b0c0e);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, .8);
 }
 .target-badge[hidden] { display: none; }
 
-.target-badge .t-label {
-  font-size: clamp(10px, 2.6vw, 12px);
-  letter-spacing: .24em;
-  color: var(--ink-dim);
-}
-.target-badge .t-value {
-  font-size: clamp(20px, 6vw, 28px);
-  font-weight: 700;
-  letter-spacing: .04em;
-  color: var(--lcd-on);
+.target-lcd {
+  font-size: clamp(30px, 6.5vh, 58px);   /* height cap read by fit() */
+  width: 100%;
+  color: var(--lcd-green);
 }
 
-/* filled in once a team gets there */
+/* lit up once a team gets there */
 .board.over .target-badge.hit {
-  border-color: var(--lcd-on);
-  background: rgba(255, 47, 47, .16);
+  border-color: var(--lcd-green);
+  background: rgba(67, 224, 77, .12);
 }
-.board.over .target-badge.hit .t-label { color: #ffb3b3; }
 
 .run-btn {
   min-height: 54px;
@@ -531,6 +524,18 @@ button {
   .chip { min-height: 42px; }
   .sw { height: 42px; }
   .custom-time input { min-height: 42px; }
+}
+
+/* short portrait: the clock, the target badge and the pads all compete with
+   the scores for one column — hold them back so the scores stay readable */
+@media (max-aspect-ratio: 1/1) and (max-height: 700px) {
+  .target-lcd { font-size: clamp(16px, 4vh, 30px); }
+  .target-badge { padding: 7px 10px; }
+  .pts { grid-template-rows: minmax(48px, 12vh) minmax(38px, 8vh); }
+  .score { padding: 8px; }
+  .clock { font-size: 12vh; }
+  .run-btn { min-height: 46px; }
+  .tool { min-height: 34px; }
 }
 
 /* very short landscape (phones): tighten everything up */

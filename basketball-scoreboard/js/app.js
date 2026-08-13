@@ -18,6 +18,12 @@
     '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
     '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000'],
     ' ': ['00000', '00000', '00000', '00000', '00000', '00000', '00000'],
+    // letters used by the target readout
+    'T': ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
+    'A': ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+    'R': ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
+    'G': ['01110', '10001', '10000', '10111', '10001', '10001', '01111'],
+    'E': ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
     ':': ['0', '0', '1', '0', '1', '0', '0'],
     '.': ['0', '0', '0', '0', '0', '0', '1']
   };
@@ -157,7 +163,6 @@
   const toggleBtn   = $('#toggle');
   const soundBtn    = $('#soundBtn');
   const targetBadge = $('#targetBadge');
-  const targetValue = $('#targetValue');
   const durMin      = $('#durMin');
   const durSec      = $('#durSec');
   const targetInput = $('#targetCustom');
@@ -170,7 +175,9 @@
   };
   const teamEl    = { a: $('#teamA'), b: $('#teamB') };
 
-  const displays = [clockDisp, scoreDisp.a, scoreDisp.b];
+  const targetDisp = new DotDisplay($('#targetLcd'));
+
+  const displays = [clockDisp, scoreDisp.a, scoreDisp.b, targetDisp];
   const fitAll = () => displays.forEach(d => d.fit());
 
   if ('ResizeObserver' in window) {
@@ -286,7 +293,7 @@
     G.countUp = G.durationMs === 0;
     G.target = settings.target;
     targetBadge.hidden = !G.target;
-    targetValue.textContent = G.target || '';
+    if (G.target) targetDisp.render(`TARGET ${G.target}`);
     resetGame();
     applyColors();
     setupScreen.classList.add('hidden');
