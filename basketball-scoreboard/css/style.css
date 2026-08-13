@@ -552,3 +552,26 @@ button {
   .score { font-size: 38vh; }
   .clock { font-size: 24vh; }
 }
+
+/* desktop: centre the form and scale it up, rather than leaving a small
+   cluster at the top with the START button stranded at the bottom edge */
+@media (min-width: 900px) and (min-height: 620px) {
+  .setup {
+    justify-content: safe center;
+    max-width: clamp(880px, 62vw, 1240px);
+    gap: 20px;
+  }
+  .setup-head h1 { font-size: 42px; }
+  .setup-body { columns: 300px; }
+  .block { padding: 16px; }
+  .chip { min-height: 54px; font-size: 17px; }
+  .sw { height: 56px; }
+  .custom-time input { min-height: 54px; font-size: 19px; }
+  .hint { font-size: 12px; }
+  .big-start {
+    position: static;          /* nothing scrolls, so it belongs in the flow */
+    min-height: 70px;
+    margin-top: 4px;
+    font-size: 24px;
+  }
+}
