@@ -90,16 +90,28 @@ button {
 .setup {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 640px;
+  gap: clamp(10px, 2.2vw, 16px);
+  max-width: 1100px;
   margin: 0 auto;
+}
+
+/* one column on a phone, more as soon as the width is there. Columns rather
+   than a grid: the blocks have different heights and pack without leaving
+   holes, and the browser balances the column heights for us. */
+.setup-body {
+  columns: 250px;
+  column-gap: clamp(10px, 2vw, 14px);
+}
+.setup-body .block {
+  break-inside: avoid;
+  margin-bottom: clamp(10px, 2vw, 14px);
 }
 
 .setup-head { text-align: center; margin: 6px 0 0; }
 
 .setup-head h1 {
   margin: 0;
-  font-size: clamp(24px, 7vw, 38px);
+  font-size: clamp(22px, 6vw, 38px);
   letter-spacing: .16em;
   color: var(--lcd-on);
   text-shadow: 0 0 18px rgba(255, 45, 20, .5);
@@ -112,8 +124,6 @@ button {
   color: var(--ink-dim);
   text-transform: uppercase;
 }
-
-.setup-body { display: flex; flex-direction: column; gap: 12px; }
 
 .block {
   margin: 0;
@@ -238,17 +248,18 @@ button {
 .sw-white[aria-pressed="true"]::after { background: #111; box-shadow: none; }
 
 .big-start {
-  min-height: 62px;
+  position: sticky;                  /* stays reachable when the form scrolls */
+  bottom: max(0px, env(safe-area-inset-bottom));
+  min-height: clamp(52px, 8vh, 62px);
   margin-top: auto;
   border: 1px solid var(--lcd-on);
   border-radius: 14px;
-  background: rgba(255, 42, 20, .16);
+  background: #2f0d0c;               /* opaque: the form scrolls underneath */
   color: #ffb3a5;
-  font-size: 22px;
+  font-size: clamp(18px, 4.5vw, 22px);
   letter-spacing: .3em;
-  text-shadow: 0 0 14px rgba(255, 45, 20, .5);
 }
-.big-start:active { background: rgba(255, 42, 20, .3); }
+.big-start:active { background: #561914; }
 
 /* ─────────────────────────────────────────────
    Game screen
@@ -314,7 +325,7 @@ button {
 /* font-size is not for text — it is the display height cap that app.js reads */
 .score {
   font-size: 21vh;
-  flex: 1 1 auto;
+  flex: 1 1 0;          /* height comes from the layout, so fit() can measure it */
   min-height: 0;
   overflow: hidden;
   align-content: center;
@@ -392,6 +403,38 @@ button {
   color: var(--ink-dim);
   pointer-events: none;
 }
+
+.target-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0c0d10;
+}
+.target-badge[hidden] { display: none; }
+
+.target-badge .t-label {
+  font-size: clamp(10px, 2.6vw, 12px);
+  letter-spacing: .24em;
+  color: var(--ink-dim);
+}
+.target-badge .t-value {
+  font-size: clamp(20px, 6vw, 28px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--lcd-on);
+}
+
+/* filled in once a team gets there */
+.board.over .target-badge.hit {
+  border-color: var(--lcd-on);
+  background: rgba(255, 47, 47, .16);
+}
+.board.over .target-badge.hit .t-label { color: #ffb3b3; }
 
 .run-btn {
   min-height: 54px;
@@ -477,16 +520,17 @@ button {
   .center { justify-content: center; }
 }
 
-/* short landscape: two setup columns so there is less to scroll past */
-@media (min-aspect-ratio: 1/1) and (max-height: 560px) {
-  .setup { max-width: 900px; }
-  .setup-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
+/* short screens: trim the setup chrome so the whole form stays reachable */
+@media (max-height: 560px) {
+  .setup-head p { display: none; }
+  .setup-head { margin-top: 0; }
+  .screen {
+    padding-top: max(6px, env(safe-area-inset-top));
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
-  .setup-head h1 { font-size: 26px; }
-  .big-start { min-height: 54px; }
+  .chip { min-height: 42px; }
+  .sw { height: 42px; }
+  .custom-time input { min-height: 42px; }
 }
 
 /* very short landscape (phones): tighten everything up */

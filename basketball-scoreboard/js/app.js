@@ -38,9 +38,10 @@
      *   of the current text — the clock passes its widest shape so the bulbs
      *   stay put when MM:SS becomes SS.T.
      */
-    constructor(el, refUnits = 0) {
+    constructor(el, refUnits = 0, fitToHeight = false) {
       this.el = el;
       this.refUnits = refUnits;
+      this.fitToHeight = fitToHeight;
       this.shape = null;   // e.g. "##:##" — DOM layout signature
       this.cells = [];     // one element per character
     }
@@ -80,6 +81,10 @@
      * Size the bulbs to the panel it sits in, so the text always keeps the
      * panel's padding clear. The CSS font-size carries the height cap — it
      * resolves vw/vh units for us, which a custom property would not.
+     *
+     * Only panels whose height comes from the layout (the scores, which flex
+     * to fill) measure their own height; the clock's height comes from its
+     * content, so measuring it would feed back into itself.
      */
     fit() {
       const style = getComputedStyle(this.el);
@@ -87,7 +92,12 @@
                   - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
       if (!(inner > 0) || !this.widthUnits) return;
 
-      const cap = parseFloat(style.fontSize) || inner;
+      let cap = parseFloat(style.fontSize) || inner;
+      if (this.fitToHeight) {
+        const room = this.el.clientHeight
+                   - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+        if (room > 0) cap = Math.min(cap, room);
+      }
       const ds = Math.min(inner / this.widthUnits, cap / CHAR_H);
       const px = `${Math.floor(ds * 100) / 100}px`;
       if (px !== this.appliedDs) {
@@ -146,13 +156,18 @@
   const statusEl    = $('#status');
   const toggleBtn   = $('#toggle');
   const soundBtn    = $('#soundBtn');
+  const targetBadge = $('#targetBadge');
+  const targetValue = $('#targetValue');
   const durMin      = $('#durMin');
   const durSec      = $('#durSec');
   const targetInput = $('#targetCustom');
 
   const CLOCK_UNITS = 4 * CHAR_W + SEP_W + 4 * KERN;   // widest shape: "88:88"
   const clockDisp = new DotDisplay(clockEl, CLOCK_UNITS);
-  const scoreDisp = { a: new DotDisplay($('#scoreA')), b: new DotDisplay($('#scoreB')) };
+  const scoreDisp = {
+    a: new DotDisplay($('#scoreA'), 0, true),
+    b: new DotDisplay($('#scoreB'), 0, true)
+  };
   const teamEl    = { a: $('#teamA'), b: $('#teamB') };
 
   const displays = [clockDisp, scoreDisp.a, scoreDisp.b];
@@ -270,6 +285,8 @@
     G.durationMs = settings.durationSec * 1000;
     G.countUp = G.durationMs === 0;
     G.target = settings.target;
+    targetBadge.hidden = !G.target;
+    targetValue.textContent = G.target || '';
     resetGame();
     applyColors();
     setupScreen.classList.add('hidden');
@@ -380,7 +397,8 @@
     G.over = true;
     G.overReason = reason;
     keepAwake(false);
-    setStatus(reason === 'TIME' ? 'TIME UP' : 'TARGET', true);
+    targetBadge.classList.toggle('hit', reason === 'TARGET');
+    setStatus(reason === 'TIME' ? 'TIME UP' : 'FINAL', true);
     buzz(reason === 'TIME' ? 2 : 1);
     render();
   }
@@ -395,7 +413,8 @@
     G.score.b = 0;
     G.shownClock = null;
     keepAwake(false);
-    setStatus(G.target ? `READY · TARGET ${G.target}` : 'READY');
+    targetBadge.classList.remove('hit');
+    setStatus('READY');
   }
 
   /* ── scoring ───────────────────────────────────────────── */
@@ -413,6 +432,7 @@
     if (G.over && G.overReason === 'TARGET' && !targetReached()) {
       G.over = false;
       G.overReason = null;
+      targetBadge.classList.remove('hit');
       setStatus(G.clockMs === clockStart() ? 'READY' : 'PAUSED');
     }
     render();
