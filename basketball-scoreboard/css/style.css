@@ -82,7 +82,12 @@ button {
   border-radius: 50%;
   background: color-mix(in srgb, currentColor 13%, transparent);
 }
-.char i.on { background: currentColor; }
+/* lit bulbs get a faint halo of their own colour — scaled to the bulb so it
+   stays proportional at every display size */
+.char i.on {
+  background: currentColor;
+  box-shadow: 0 0 calc(var(--dot) * .45) color-mix(in srgb, currentColor 50%, transparent);
+}
 
 /* ─────────────────────────────────────────────
    Setup screen
