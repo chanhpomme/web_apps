@@ -108,7 +108,9 @@
   };
 
   const STORE_KEY = 'scoreboard.settings.v1';
-  const DEFAULTS = { durationSec: 600, colorA: 'red', colorB: 'black', target: 0, sound: true };
+  // durationSec 0 means no period clock — the clock counts up and only the
+  // target score ends the game.
+  const DEFAULTS = { durationSec: 0, colorA: 'red', colorB: 'black', target: 7, sound: true };
   const MAX_SEC = 99 * 60 + 59;
 
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
@@ -122,7 +124,7 @@
       const s = { ...DEFAULTS, ...raw };
       if (!COLORS[s.colorA]) s.colorA = DEFAULTS.colorA;
       if (!COLORS[s.colorB]) s.colorB = DEFAULTS.colorB;
-      s.durationSec = clamp(Math.round(+s.durationSec || 0), 1, MAX_SEC);
+      s.durationSec = clamp(Math.round(+s.durationSec || 0), 0, MAX_SEC);
       s.target = clamp(Math.round(+s.target || 0), 0, 199);
       s.sound = s.sound !== false;
       return s;
@@ -166,9 +168,12 @@
 
   /* ── game state ────────────────────────────────────────── */
 
+  const MAX_CLOCK_MS = MAX_SEC * 1000;
+
   const G = {
     durationMs: 0,
-    remainingMs: 0,
+    countUp: false,     // no period set: the clock counts up from zero
+    clockMs: 0,         // time left, or time elapsed when counting up
     running: false,
     over: false,
     overReason: null,
@@ -213,7 +218,7 @@
   function readCustomDuration() {
     const m = clamp(Math.floor(+durMin.value || 0), 0, 99);
     const s = clamp(Math.floor(+durSec.value || 0), 0, 59);
-    settings.durationSec = clamp(m * 60 + s, 1, MAX_SEC);
+    settings.durationSec = clamp(m * 60 + s, 0, MAX_SEC);
     save();
     document.querySelectorAll('#durationChips .chip').forEach(c => {
       c.setAttribute('aria-pressed', String(+c.dataset.sec === settings.durationSec));
@@ -263,6 +268,7 @@
 
   function startGame() {
     G.durationMs = settings.durationSec * 1000;
+    G.countUp = G.durationMs === 0;
     G.target = settings.target;
     resetGame();
     applyColors();
@@ -292,16 +298,19 @@
   /* ── clock ─────────────────────────────────────────────── */
 
   function formatClock(ms) {
-    if (ms < 60000) {                       // last minute: seconds + tenths
+    if (!G.countUp && ms < 60000) {          // last minute: seconds + tenths
       const tenths = Math.ceil(ms / 100);
       return `${String(Math.floor(tenths / 10)).padStart(2, '0')}.${tenths % 10}`;
     }
-    const secs = Math.ceil(ms / 1000);
+    const secs = G.countUp ? Math.floor(ms / 1000) : Math.ceil(ms / 1000);
     return `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
   }
 
+  /** Where the clock sits before anyone touches it. */
+  const clockStart = () => (G.countUp ? 0 : G.durationMs);
+
   function render() {
-    const text = formatClock(G.remainingMs);
+    const text = formatClock(G.clockMs);
     if (text !== G.shownClock) {
       clockDisp.render(text);
       G.shownClock = text;
@@ -323,18 +332,23 @@
     const now = performance.now();
     const dt = now - G.last;
     G.last = now;
-    G.remainingMs = Math.max(0, G.remainingMs - dt);
-    render();
-    if (G.remainingMs === 0) {
-      finish('TIME');
-      return;
+    if (G.countUp) {
+      G.clockMs = Math.min(MAX_CLOCK_MS, G.clockMs + dt);
+      render();
+    } else {
+      G.clockMs = Math.max(0, G.clockMs - dt);
+      render();
+      if (G.clockMs === 0) {
+        finish('TIME');
+        return;
+      }
     }
     G.raf = requestAnimationFrame(loop);
   }
 
   function start() {
     if (G.running || G.over) return;
-    if (G.remainingMs <= 0) return;
+    if (!G.countUp && G.clockMs <= 0) return;
     G.running = true;
     G.last = performance.now();
     G.raf = requestAnimationFrame(loop);
@@ -376,7 +390,7 @@
     G.running = false;
     G.over = false;
     G.overReason = null;
-    G.remainingMs = G.durationMs;
+    G.clockMs = clockStart();
     G.score.a = 0;
     G.score.b = 0;
     G.shownClock = null;
@@ -399,7 +413,7 @@
     if (G.over && G.overReason === 'TARGET' && !targetReached()) {
       G.over = false;
       G.overReason = null;
-      setStatus(G.remainingMs === G.durationMs ? 'READY' : 'PAUSED');
+      setStatus(G.clockMs === clockStart() ? 'READY' : 'PAUSED');
     }
     render();
     if (!G.over && targetReached()) finish('TARGET');
@@ -414,7 +428,7 @@
   toggleBtn.addEventListener('click', toggleRun);
 
   $('#resetBtn').addEventListener('click', () => {
-    if (G.score.a || G.score.b || G.remainingMs !== G.durationMs) {
+    if (G.score.a || G.score.b || G.clockMs !== clockStart()) {
       if (!confirm('Reset clock and scores?')) return;
     }
     resetGame();
@@ -504,6 +518,7 @@
   soundBtn.setAttribute('aria-pressed', String(settings.sound));
   paintSetup();
   G.durationMs = settings.durationSec * 1000;
-  G.remainingMs = G.durationMs;
+  G.countUp = G.durationMs === 0;
+  G.clockMs = clockStart();
   G.target = settings.target;
 })();

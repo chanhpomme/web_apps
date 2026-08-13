@@ -156,6 +156,14 @@ button {
   color: #ff8f7c;
 }
 
+.hint {
+  margin: 10px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: .06em;
+  color: var(--ink-dim);
+}
+
 .custom-time {
   display: flex;
   align-items: flex-end;

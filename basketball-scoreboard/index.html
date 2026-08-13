@@ -25,13 +25,14 @@
     <fieldset class="block">
       <legend>Duration</legend>
       <div class="chips" id="durationChips">
-        <button type="button" class="chip" data-sec="60">1:00</button>
+        <button type="button" class="chip" data-sec="0">OFF</button>
         <button type="button" class="chip" data-sec="180">3:00</button>
         <button type="button" class="chip" data-sec="300">5:00</button>
+        <button type="button" class="chip" data-sec="360">6:00</button>
+        <button type="button" class="chip" data-sec="420">7:00</button>
         <button type="button" class="chip" data-sec="600">10:00</button>
-        <button type="button" class="chip" data-sec="720">12:00</button>
-        <button type="button" class="chip" data-sec="1200">20:00</button>
       </div>
+      <p class="hint">OFF counts up instead — play to the target score.</p>
       <div class="custom-time">
         <label>min <input type="number" id="durMin" min="0" max="99" inputmode="numeric"></label>
         <span class="sep">:</span>
@@ -65,10 +66,10 @@
       <legend>Target points <em>(optional)</em></legend>
       <div class="chips" id="targetChips">
         <button type="button" class="chip" data-target="0">OFF</button>
+        <button type="button" class="chip" data-target="3">3</button>
+        <button type="button" class="chip" data-target="5">5</button>
         <button type="button" class="chip" data-target="7">7</button>
-        <button type="button" class="chip" data-target="11">11</button>
-        <button type="button" class="chip" data-target="15">15</button>
-        <button type="button" class="chip" data-target="21">21</button>
+        <button type="button" class="chip" data-target="12">12</button>
       </div>
       <div class="custom-time">
         <label>points <input type="number" id="targetCustom" min="0" max="199" inputmode="numeric" placeholder="—"></label>
