@@ -2,130 +2,59 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Scoreboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Web Apps</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07080a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Retro LCD basketball scoreboard for training sessions.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%2307080a'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23ff2b16' font-family='monospace'>88</text></svg>">
-<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%2307080a'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23ff2b16' font-family='monospace'>&#9636;</text></svg>">
+<style>
+  :root { --bg:#07080a; --panel:#0e1013; --line:#23282f; --ink:#dfe3e8; --ink-dim:#8a929c; --accent:#ff2a14; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: max(24px, env(safe-area-inset-top)) 20px 40px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 {
+    margin: 12px 0 4px;
+    font-size: clamp(24px, 7vw, 34px);
+    letter-spacing: .16em;
+    color: var(--accent);
+    text-shadow: 0 0 18px rgba(255, 45, 20, .45);
+  }
+  h1 span { color: var(--ink); text-shadow: none; }
+  p.sub { margin: 0 0 28px; font-size: 12px; letter-spacing: .3em; color: var(--ink-dim); text-transform: uppercase; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  a.card {
+    display: block;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color .15s, background .15s;
+  }
+  a.card:hover, a.card:focus-visible { border-color: var(--accent); background: #14171b; }
+  a.card strong { display: block; font-size: 18px; letter-spacing: .1em; }
+  a.card em { display: block; margin-top: 6px; font-style: normal; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+</style>
 </head>
 <body>
-
-<!-- ───────────── SETUP ───────────── -->
-<section id="setup" class="screen setup">
-  <header class="setup-head">
-    <h1>SCORE<span>BOARD</span></h1>
-    <p>training mode</p>
-  </header>
-
-  <div class="setup-body">
-    <fieldset class="block">
-      <legend>Duration</legend>
-      <div class="chips" id="durationChips">
-        <button type="button" class="chip" data-sec="60">1:00</button>
-        <button type="button" class="chip" data-sec="180">3:00</button>
-        <button type="button" class="chip" data-sec="300">5:00</button>
-        <button type="button" class="chip" data-sec="600">10:00</button>
-        <button type="button" class="chip" data-sec="720">12:00</button>
-        <button type="button" class="chip" data-sec="1200">20:00</button>
-      </div>
-      <div class="custom-time">
-        <label>min <input type="number" id="durMin" min="0" max="99" inputmode="numeric"></label>
-        <span class="sep">:</span>
-        <label>sec <input type="number" id="durSec" min="0" max="59" inputmode="numeric"></label>
-      </div>
-    </fieldset>
-
-    <fieldset class="block">
-      <legend>Team colors</legend>
-      <div class="color-row">
-        <span class="side-tag">A</span>
-        <div class="swatches" data-team="a">
-          <button type="button" class="sw sw-red"   data-color="red"   aria-label="Red"></button>
-          <button type="button" class="sw sw-green" data-color="green" aria-label="Green"></button>
-          <button type="button" class="sw sw-black" data-color="black" aria-label="Black"></button>
-          <button type="button" class="sw sw-white" data-color="white" aria-label="White"></button>
-        </div>
-      </div>
-      <div class="color-row">
-        <span class="side-tag">B</span>
-        <div class="swatches" data-team="b">
-          <button type="button" class="sw sw-red"   data-color="red"   aria-label="Red"></button>
-          <button type="button" class="sw sw-green" data-color="green" aria-label="Green"></button>
-          <button type="button" class="sw sw-black" data-color="black" aria-label="Black"></button>
-          <button type="button" class="sw sw-white" data-color="white" aria-label="White"></button>
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset class="block">
-      <legend>Target points <em>(optional)</em></legend>
-      <div class="chips" id="targetChips">
-        <button type="button" class="chip" data-target="0">OFF</button>
-        <button type="button" class="chip" data-target="7">7</button>
-        <button type="button" class="chip" data-target="11">11</button>
-        <button type="button" class="chip" data-target="15">15</button>
-        <button type="button" class="chip" data-target="21">21</button>
-      </div>
-      <div class="custom-time">
-        <label>points <input type="number" id="targetCustom" min="0" max="199" inputmode="numeric" placeholder="—"></label>
-      </div>
-    </fieldset>
-  </div>
-
-  <button type="button" id="startGame" class="big-start">START</button>
-</section>
-
-<!-- ───────────── GAME ───────────── -->
-<section id="game" class="screen game hidden">
-  <div class="board">
-
-    <div class="team" id="teamA">
-      <div class="team-label"><span class="dot"></span><span class="name">RED</span></div>
-      <div class="lcd score" id="scoreA" aria-live="off"></div>
-      <div class="pts">
-        <button type="button" class="pt plus"  data-team="a" data-delta="1">+1</button>
-        <button type="button" class="pt plus"  data-team="a" data-delta="2">+2</button>
-        <button type="button" class="pt plus"  data-team="a" data-delta="3">+3</button>
-        <button type="button" class="pt minus" data-team="a" data-delta="-1">−1</button>
-        <button type="button" class="pt minus" data-team="a" data-delta="-2">−2</button>
-        <button type="button" class="pt minus" data-team="a" data-delta="-3">−3</button>
-      </div>
-    </div>
-
-    <div class="center">
-      <div class="clock-wrap">
-        <button type="button" class="lcd clock" id="clock" aria-label="Clock: tap to start or pause"></button>
-        <div class="status" id="status">READY</div>
-      </div>
-      <button type="button" id="toggle" class="run-btn">START</button>
-      <div class="center-tools">
-        <button type="button" id="resetBtn"  class="tool" title="Reset">RESET</button>
-        <button type="button" id="soundBtn"  class="tool" title="Sound" aria-pressed="true">SND</button>
-        <button type="button" id="fsBtn"     class="tool" title="Fullscreen">FULL</button>
-        <button type="button" id="setupBtn"  class="tool" title="Setup">SETUP</button>
-      </div>
-    </div>
-
-    <div class="team" id="teamB">
-      <div class="team-label"><span class="dot"></span><span class="name">BLACK</span></div>
-      <div class="lcd score" id="scoreB" aria-live="off"></div>
-      <div class="pts">
-        <button type="button" class="pt plus"  data-team="b" data-delta="1">+1</button>
-        <button type="button" class="pt plus"  data-team="b" data-delta="2">+2</button>
-        <button type="button" class="pt plus"  data-team="b" data-delta="3">+3</button>
-        <button type="button" class="pt minus" data-team="b" data-delta="-1">−1</button>
-        <button type="button" class="pt minus" data-team="b" data-delta="-2">−2</button>
-        <button type="button" class="pt minus" data-team="b" data-delta="-3">−3</button>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<script src="js/app.js"></script>
+<main>
+  <h1>WEB<span>APPS</span></h1>
+  <p class="sub">chanhpomme</p>
+  <ul>
+    <li>
+      <a class="card" href="basketball-scoreboard/">
+        <strong>BASKETBALL SCOREBOARD</strong>
+        <em>Retro red-LCD scoreboard for training — timer, team colors, target score.</em>
+      </a>
+    </li>
+  </ul>
+</main>
 </body>
 </html>
