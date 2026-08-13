@@ -62,7 +62,7 @@
   // `edge` keeps the point-pad borders visible for the very dark / very light kits.
   const COLORS = {
     red:   { label: 'RED',   css: 'var(--c-red)',   ink: '#fff',    edge: '#e8474d' },
-    green: { label: 'GREEN', css: 'var(--c-green)', ink: '#fff',    edge: '#38b568' },
+    green: { label: 'GREEN', css: 'var(--c-green)', ink: '#fff',    edge: '#6ec03f' },
     black: { label: 'BLACK', css: 'var(--c-black)', ink: '#e8e8e8', edge: '#5b636d' },
     white: { label: 'WHITE', css: 'var(--c-white)', ink: '#111',    edge: '#d8dade' }
   };

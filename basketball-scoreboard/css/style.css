@@ -17,7 +17,7 @@
 
   /* team colors */
   --c-red:   #d81f26;
-  --c-green: #1f9d4d;
+  --c-green: #4da424;
   --c-black: #15171a;
   --c-white: #f1f1f1;
 }
@@ -69,9 +69,6 @@ button {
   filter: drop-shadow(0 0 calc(var(--ds) * .10) var(--lcd-glow))
           drop-shadow(0 0 calc(var(--ds) * .32) rgba(255, 30, 10, .35));
 }
-
-/* the italic lean lives on the glyphs, so display bezels stay square */
-.digit, .sep { transform: skewX(-4deg); }
 
 .digit {
   position: relative;
