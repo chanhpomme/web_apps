@@ -380,13 +380,6 @@
     if (settings.sound) tap();
   });
 
-  $('#fsBtn').addEventListener('click', async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-    } catch { /* iOS Safari has no fullscreen API for elements */ }
-  });
-
   document.addEventListener('keydown', e => {
     if (!setupScreen.classList.contains('hidden')) return;
     if (e.target.closest('button')) return;   // let the focused button handle it

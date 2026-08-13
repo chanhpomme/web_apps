@@ -23,8 +23,7 @@ no build step, no dependencies. Works on a phone in both portrait and landscape.
 | `+1 +2 +3` | Add points to that team |
 | `−1 −2 −3` | Take points back off |
 | `RESET` | Clock back to full, both scores to 0 |
-| `SND` | Mute or unmute the buzzer |
-| `FULL` | Fullscreen (not supported by iOS Safari) |
+| Speaker icon | Mute or unmute the buzzer |
 | `SETUP` | Back to the setup screen |
 
 ## Run it locally
