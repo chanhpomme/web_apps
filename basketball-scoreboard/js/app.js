@@ -2,58 +2,98 @@
 (() => {
   'use strict';
 
-  /* ── seven-segment rendering ───────────────────────────── */
+  /* ── dot-matrix rendering ──────────────────────────────── */
 
-  const SEGMENTS = {
-    '0': 'abcdef', '1': 'bc',     '2': 'abdeg',  '3': 'abcdg',  '4': 'bcfg',
-    '5': 'acdfg',  '6': 'acdefg', '7': 'abc',    '8': 'abcdefg','9': 'abcdfg',
-    '-': 'g',      ' ': ''
+  // 5x7 bulb font; separators are one column wide.
+  const GLYPHS = {
+    '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+    '3': ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
+    '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+    '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+    '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+    '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+    '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+    '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000'],
+    ' ': ['00000', '00000', '00000', '00000', '00000', '00000', '00000'],
+    ':': ['0', '0', '1', '0', '1', '0', '0'],
+    '.': ['0', '0', '0', '0', '0', '0', '1']
   };
-  const SEG_NAMES = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
-  /** A row of 7-segment digits + separators, rebuilt only when the layout changes. */
-  class SegDisplay {
-    constructor(el) {
+  const ROWS = 7;
+  const isSep = ch => ch === ':' || ch === '.';
+
+  // Character metrics as multiples of --ds, mirroring the CSS bulb grid.
+  const CHAR_W = 0.6286;   // 5 bulbs + 4 gaps
+  const SEP_W  = 0.1069;   // 1 bulb
+  const CHAR_H = 0.8894;   // 7 bulbs + 6 gaps
+  const KERN   = 0.12;     // gap between characters
+
+  /** A row of dot-matrix characters, rebuilt only when the layout changes. */
+  class DotDisplay {
+    /**
+     * @param refUnits width, in --ds units, to size the bulbs against instead
+     *   of the current text — the clock passes its widest shape so the bulbs
+     *   stay put when MM:SS becomes SS.T.
+     */
+    constructor(el, refUnits = 0) {
       this.el = el;
+      this.refUnits = refUnits;
       this.shape = null;   // e.g. "##:##" — DOM layout signature
-      this.cells = [];     // per-character element (digit or separator)
+      this.cells = [];     // one element per character
     }
 
     render(text) {
-      const shape = text.replace(/[0-9\- ]/g, '#');
+      const shape = [...text].map(ch => (isSep(ch) ? ch : '#')).join('');
       if (shape !== this.shape) this.build(shape);
-      let i = 0;
-      for (const ch of text) {
-        const cell = this.cells[i++];
-        if (cell.dataset.kind === 'digit') {
-          const lit = SEGMENTS[ch] ?? '';
-          SEG_NAMES.forEach((s, k) => cell.children[k].classList.toggle('on', lit.includes(s)));
+      [...text].forEach((ch, i) => {
+        const bulbs = this.cells[i].children;
+        let k = 0;
+        for (const row of GLYPHS[ch] ?? GLYPHS[' ']) {
+          for (const bit of row) bulbs[k++].classList.toggle('on', bit === '1');
         }
-      }
+      });
     }
 
     build(shape) {
       this.el.textContent = '';
       this.cells = [...shape].map(ch => {
+        const wide = ch === '#';
         const cell = document.createElement('span');
-        if (ch === '#') {
-          cell.className = 'digit';
-          cell.dataset.kind = 'digit';
-          for (const s of SEG_NAMES) {
-            const seg = document.createElement('i');
-            seg.className = `seg seg-${s}`;
-            cell.appendChild(seg);
-          }
-        } else {
-          cell.className = ch === ':' ? 'sep sep-colon' : 'sep sep-dot';
-          cell.dataset.kind = 'sep';
-          cell.appendChild(document.createElement('i'));
+        cell.className = wide ? 'char' : 'char char-sep';
+        for (let k = (wide ? 5 : 1) * ROWS; k > 0; k--) {
           cell.appendChild(document.createElement('i'));
         }
         this.el.appendChild(cell);
         return cell;
       });
       this.shape = shape;
+      this.widthUnits = this.refUnits
+        || [...shape].reduce((w, ch) => w + (ch === '#' ? CHAR_W : SEP_W), 0)
+           + KERN * (shape.length - 1);
+      this.fit();
+    }
+
+    /**
+     * Size the bulbs to the panel it sits in, so the text always keeps the
+     * panel's padding clear. The CSS font-size carries the height cap — it
+     * resolves vw/vh units for us, which a custom property would not.
+     */
+    fit() {
+      const style = getComputedStyle(this.el);
+      const inner = this.el.clientWidth
+                  - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      if (!(inner > 0) || !this.widthUnits) return;
+
+      const cap = parseFloat(style.fontSize) || inner;
+      const ds = Math.min(inner / this.widthUnits, cap / CHAR_H);
+      const px = `${Math.floor(ds * 100) / 100}px`;
+      if (px !== this.appliedDs) {
+        this.el.style.setProperty('--ds', px);
+        this.appliedDs = px;
+      }
     }
   }
 
@@ -108,9 +148,21 @@
   const durSec      = $('#durSec');
   const targetInput = $('#targetCustom');
 
-  const clockDisp = new SegDisplay(clockEl);
-  const scoreDisp = { a: new SegDisplay($('#scoreA')), b: new SegDisplay($('#scoreB')) };
+  const CLOCK_UNITS = 4 * CHAR_W + SEP_W + 4 * KERN;   // widest shape: "88:88"
+  const clockDisp = new DotDisplay(clockEl, CLOCK_UNITS);
+  const scoreDisp = { a: new DotDisplay($('#scoreA')), b: new DotDisplay($('#scoreB')) };
   const teamEl    = { a: $('#teamA'), b: $('#teamB') };
+
+  const displays = [clockDisp, scoreDisp.a, scoreDisp.b];
+  const fitAll = () => displays.forEach(d => d.fit());
+
+  if ('ResizeObserver' in window) {
+    // fit() is idempotent, so the resize it may cause settles on the next pass
+    const ro = new ResizeObserver(fitAll);
+    displays.forEach(d => ro.observe(d.el));
+  }
+  addEventListener('resize', fitAll);
+  addEventListener('orientationchange', fitAll);
 
   /* ── game state ────────────────────────────────────────── */
 
@@ -255,9 +307,7 @@
       G.shownClock = text;
     }
     for (const side of ['a', 'b']) {
-      const text = String(G.score[side]).padStart(2, '0');
-      scoreDisp[side].el.classList.toggle('wide', text.length > 2);
-      scoreDisp[side].render(text);
+      scoreDisp[side].render(String(G.score[side]).padStart(2, '0'));
     }
     toggleBtn.textContent = G.running ? 'PAUSE' : G.over ? 'RESET' : 'START';
     toggleBtn.dataset.state = G.running ? 'run' : 'idle';

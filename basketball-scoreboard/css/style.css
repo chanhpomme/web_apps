@@ -10,10 +10,9 @@
   --ink:       #dfe3e8;
   --ink-dim:   #8a929c;
 
-  /* red LCD */
-  --lcd-on:    #ff2a14;
-  --lcd-off:   rgba(255, 60, 32, .075);
-  --lcd-glow:  rgba(255, 45, 20, .75);
+  /* bulb colors: red scores, amber clock — as on a Fair-Play board */
+  --lcd-on:    #ff2f2f;
+  --lcd-amber: #ffa019;
 
   /* team colors */
   --c-red:   #d81f26;
@@ -56,86 +55,33 @@ button {
 }
 
 /* ─────────────────────────────────────────────
-   Seven-segment display
+   Dot-matrix bulb display
    ───────────────────────────────────────────── */
 
 .lcd {
-  --ds: 40px;                 /* master size unit for the display */
+  --ds: 40px;                        /* master size unit for the display */
+  --dot: calc(var(--ds) * .1069);    /* 5 bulbs + 4 gaps == .62 * --ds wide */
+  --dot-gap: calc(var(--dot) * .22);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: calc(var(--ds) * .10);
+  gap: calc(var(--ds) * .12);
   color: var(--lcd-on);
-  filter: drop-shadow(0 0 calc(var(--ds) * .10) var(--lcd-glow))
-          drop-shadow(0 0 calc(var(--ds) * .32) rgba(255, 30, 10, .35));
 }
 
-.digit {
-  position: relative;
-  width:  calc(var(--ds) * .62);
-  height: calc(var(--ds) * 1.08);
-  --t:  calc(var(--ds) * .115);
-  --t2: calc(var(--ds) * .0575);
+.char {
+  display: grid;
+  grid-template-columns: repeat(5, var(--dot));
+  grid-auto-rows: var(--dot);
+  gap: var(--dot-gap);
 }
+.char-sep { grid-template-columns: var(--dot); }
 
-.seg {
-  position: absolute;
-  background: var(--lcd-off);
+.char i {
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 13%, transparent);
 }
-
-.seg.on { background: currentColor; }
-
-/* horizontal segments: a (top), g (middle), d (bottom) */
-.seg-a, .seg-g, .seg-d {
-  left: calc(var(--t) * .55);
-  width: calc(100% - var(--t) * 1.1);
-  height: var(--t);
-  clip-path: polygon(0 50%, var(--t2) 0, calc(100% - var(--t2)) 0,
-                     100% 50%, calc(100% - var(--t2)) 100%, var(--t2) 100%);
-}
-.seg-a { top: 0; }
-.seg-g { top: calc(50% - var(--t) / 2); }
-.seg-d { bottom: 0; }
-
-/* vertical segments: f/b (upper), e/c (lower) */
-.seg-f, .seg-b, .seg-e, .seg-c {
-  width: var(--t);
-  height: calc(50% - var(--t) * 1.05);
-  clip-path: polygon(50% 0, 100% var(--t2), 100% calc(100% - var(--t2)),
-                     50% 100%, 0 calc(100% - var(--t2)), 0 var(--t2));
-}
-.seg-f { left: 0;  top: calc(var(--t) * .55); }
-.seg-b { right: 0; top: calc(var(--t) * .55); }
-.seg-e { left: 0;  bottom: calc(var(--t) * .55); }
-.seg-c { right: 0; bottom: calc(var(--t) * .55); }
-
-/* colon / decimal separators */
-.sep {
-  position: relative;
-  width: calc(var(--ds) * .22);
-  height: calc(var(--ds) * 1.08);
-}
-.sep i {
-  position: absolute;
-  left: 50%;
-  width: var(--dot, calc(var(--ds) * .13));
-  aspect-ratio: 1;
-  margin-left: calc(var(--dot, calc(var(--ds) * .13)) / -2);
-  border-radius: 2px;
-  background: currentColor;
-}
-.sep-colon i:nth-child(1) { top: 28%; }
-.sep-colon i:nth-child(2) { top: 62%; }
-.sep-dot   i:nth-child(1) { display: none; }
-.sep-dot   i:nth-child(2) { top: 76%; }
-
-/* the physical LCD panel behind the digits */
-.lcd-panel {
-  background: linear-gradient(180deg, #131417, #0b0c0e);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: inset 0 2px 14px rgba(0, 0, 0, .8);
-}
+.char i.on { background: currentColor; }
 
 /* ─────────────────────────────────────────────
    Setup screen
@@ -357,29 +303,26 @@ button {
 }
 .team-label .dot { display: none; }
 
+/* font-size is not for text — it is the display height cap that app.js reads */
 .score {
-  --dsbase: min(31vw, 18vh);
-  --ds: calc(var(--dsbase) * var(--k, 1));
+  font-size: 21vh;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
   align-content: center;
-  padding: 8px 0;
+  padding: 12px 10px;
   background: linear-gradient(180deg, #131417, #0b0c0e);
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: inset 0 2px 14px rgba(0, 0, 0, .8);
 }
 
-/* three digits have to fit the same panel */
-.score.wide { --k: .66; }
-
 /* the point pads soak up the leftover height — big, easy targets */
 .pts {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: minmax(56px, 13vh) minmax(44px, 9vh);
+  grid-template-rows: minmax(56px, 15vh) minmax(44px, 10vh);
   gap: 6px;
   min-height: 0;
 }
@@ -417,9 +360,10 @@ button {
 .clock-wrap { position: relative; }
 
 .clock {
-  --ds: min(28vw, 19vh);
+  font-size: 22vh;
   width: 100%;
-  padding: 10px 8px 20px;
+  padding: 12px 14px 24px;
+  color: var(--lcd-amber);
   background: linear-gradient(180deg, #131417, #0b0c0e);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -502,7 +446,7 @@ button {
 .board.over .clock { animation: flash 1s steps(1, end) infinite; }
 
 @keyframes flash {
-  0%, 49%   { filter: none; }
+  0%, 49%   { opacity: 1; }
   50%, 100% { opacity: .18; }
 }
 
@@ -514,12 +458,14 @@ button {
 
 @media (min-aspect-ratio: 1/1) {
   .board {
-    grid-template-columns: 1fr minmax(215px, .85fr) 1fr;
+    /* the clock is 5 characters wide against the scores' 2, so it needs the
+       roomier column to read as the biggest thing on the board */
+    grid-template-columns: 1fr minmax(240px, 1.5fr) 1fr;
     grid-template-rows: 1fr;
     grid-template-areas: "teama center teamb";
   }
-  .score { --dsbase: min(24vw, 32vh); }
-  .clock { --ds: min(7.8vw, 19vh); }
+  .score { font-size: 36vh; }
+  .clock { font-size: 22vh; }
   .center { justify-content: center; }
 }
 
@@ -537,8 +483,8 @@ button {
 
 /* very short landscape (phones): tighten everything up */
 @media (min-aspect-ratio: 1/1) and (max-height: 480px) {
-  .score { --dsbase: min(22vw, 30vh); }
-  .clock { --ds: min(7.8vw, 18vh); }
+  .score { font-size: 33vh; }
+  .clock { font-size: 20vh; }
   .pts { grid-template-rows: minmax(44px, 15vh) minmax(34px, 11vh); }
   .team-label { min-height: 28px; }
   .tool { min-height: 34px; font-size: 10px; }
@@ -546,6 +492,6 @@ button {
 }
 
 @media (min-width: 900px) {
-  .score { --dsbase: min(14vw, 34vh); }
-  .clock { --ds: min(7vw, 22vh); }
+  .score { font-size: 38vh; }
+  .clock { font-size: 24vh; }
 }
